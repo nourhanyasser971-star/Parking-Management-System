@@ -1,0 +1,13 @@
+# Code::Blocks build output
+bin/
+obj/
+*.o
+*.exe
+*.depend
+*.layout
+*.save-all
+
+# ImGui / GLFW libraries (download them yourself, see README)
+imgui/
+glfw/
+imgui.ini

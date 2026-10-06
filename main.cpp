@@ -1,7 +1,16 @@
+// =====================================================
+// main.cpp  -  Parking Management System
+//
+// Only THIS file is compiled. It includes Database.cpp and GUI.cpp
+// below (so there are no .h files). In Code::Blocks, Database.cpp and
+// GUI.cpp are set to "do not compile / do not link" (already done in the .cbp).
+// =====================================================
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 using namespace std;
+
 
 // =====================================================
 // Employee
@@ -16,16 +25,27 @@ private:
 
 public:
     // ---- Constructors ----
-    Employee();
-    // TODO: Employee(int id, string username, string password, string name);
+    Employee() : id(0), username(""), password(""), name("") {}
+    Employee(int id, string username, string password, string name)
+    {
+        this->id = id;
+        this->username = username;
+        this->password = password;
+        this->name = name;
+    }
 
     // ---- Getters / Setters ----
-    // TODO: int getId() const;
-    // TODO: string getUsername() const;
-    // TODO: void setName(const string& name);
+    int getId() const { return id; }
+    string getUsername() const { return username; }
+    string getPassword() const { return password; }
+    string getName() const { return name; }
+    void setName(const string& name) { this->name = name; }
 
     // ---- Behavior ----
-    // TODO: bool login(const string& username, const string& password);
+    bool login(const string& username, const string& password) const
+    {
+        return this->username == username && this->password == password;
+    }
 };
 
 
@@ -42,22 +62,31 @@ private:
 
 public:
     // ---- Constructors ----
-    Customer();
-    // TODO: Customer(int id, string name, string phone, string email);
+    Customer() : id(0), name(""), phone(""), email("") {}
+    Customer(int id, string name, string phone, string email)
+    {
+        this->id = id;
+        this->name = name;
+        this->phone = phone;
+        this->email = email;
+    }
 
     // ---- Getters / Setters ----
-    // TODO: int getId() const;
-    // TODO: string getName() const;
-    // TODO: void setPhone(const string& phone);
+    int getId() const { return id; }
+    string getName() const { return name; }
+    string getPhone() const { return phone; }
+    string getEmail() const { return email; }
 
-    // ---- Behavior ----
-    // TODO: bool save();      // insert/update in DB via Database class
-    // TODO: bool remove();    // delete from DB
+    void setId(int id) { this->id = id; }
+    void setName(const string& name) { this->name = name; }
+    void setPhone(const string& phone) { this->phone = phone; }
+    void setEmail(const string& email) { this->email = email; }
 };
 
-// ---------------------------------------------------------------------
+
+// =====================================================
 // Vehicle (Abstract Base Class)
-// ---------------------------------------------------------------------
+// =====================================================
 class Vehicle
 {
 protected:
@@ -67,12 +96,15 @@ protected:
     string model;
 
 public:
+    // ---- Constructors ----
     Vehicle() : id(0), customerId(0), plateNumber(""), model("") {}
-
     Vehicle(int id, int customerId, string plateNumber, string model)
-        : id(id), customerId(customerId),
-          plateNumber(plateNumber), model(model) {}
-
+    {
+        this->id = id;
+        this->customerId = customerId;
+        this->plateNumber = plateNumber;
+        this->model = model;
+    }
     virtual ~Vehicle() {}
 
     // ---- Getters / Setters ----
@@ -80,206 +112,89 @@ public:
     int getCustomerId() const { return customerId; }
     string getPlateNumber() const { return plateNumber; }
     string getModel() const { return model; }
-    void setId(int newId) { id = newId; }
+    void setId(int id) { this->id = id; }
 
     // ---- Pure Virtual (Polymorphism) ----
     virtual string getVehicleType() const = 0;
     virtual void displayInfo() const = 0;
-
-    virtual int getExtraAttribute() const = 0;
+    virtual int getExtraAttribute() const = 0;       // doors (Car) or engine cc (Motorcycle)
+    virtual string getExtraDescription() const = 0;  // text for the GUI, e.g. "4 doors"
 };
 
-// ---------------------------------------------------------------------
-// Car
-// ---------------------------------------------------------------------
+
+// =====================================================
+// Car (inherits Vehicle)
+// =====================================================
 class Car : public Vehicle
 {
 private:
     int numberOfDoors;
 
 public:
+    // ---- Constructors ----
     Car() : Vehicle(), numberOfDoors(4) {}
+    Car(int id, int customerId, string plateNumber, string model, int numberOfDoors = 4)
+        : Vehicle(id, customerId, plateNumber, model)
+    {
+        this->numberOfDoors = numberOfDoors;
+    }
 
-    Car(int id, int customerId, string plateNumber, string model, int numberOfDoors)
-        : Vehicle(id, customerId, plateNumber, model),
-          numberOfDoors(numberOfDoors) {}
-
+    // ---- Overrides ----
     string getVehicleType() const override { return "Car"; }
-
     int getExtraAttribute() const override { return numberOfDoors; }
-
+    string getExtraDescription() const override { return to_string(numberOfDoors) + " doors"; }
     void displayInfo() const override
     {
-        cout << "[Car] ID: " << id
-             << " | Plate: " << plateNumber
-             << " | Model: " << model
-             << " | Doors: " << numberOfDoors << endl;
+        cout << "[Car] ID: " << id << " | Plate: " << plateNumber
+             << " | Model: " << model << " | Doors: " << numberOfDoors << endl;
     }
 };
 
-// ---------------------------------------------------------------------
-// Motorcycle
-// ---------------------------------------------------------------------
+
+// =====================================================
+// Motorcycle (inherits Vehicle)
+// =====================================================
 class Motorcycle : public Vehicle
 {
 private:
     int engineCC;
 
 public:
+    // ---- Constructors ----
     Motorcycle() : Vehicle(), engineCC(0) {}
+    Motorcycle(int id, int customerId, string plateNumber, string model, int engineCC = 0)
+        : Vehicle(id, customerId, plateNumber, model)
+    {
+        this->engineCC = engineCC;
+    }
 
-    Motorcycle(int id, int customerId, string plateNumber, string model, int engineCC)
-        : Vehicle(id, customerId, plateNumber, model),
-          engineCC(engineCC) {}
-
+    // ---- Overrides ----
     string getVehicleType() const override { return "Motorcycle"; }
-
     int getExtraAttribute() const override { return engineCC; }
-
+    string getExtraDescription() const override { return to_string(engineCC) + " cc"; }
     void displayInfo() const override
     {
-        cout << "[Motorcycle] ID: " << id
-             << " | Plate: " << plateNumber
-             << " | Model: " << model
-             << " | Engine: " << engineCC << "cc" << endl;
+        cout << "[Motorcycle] ID: " << id << " | Plate: " << plateNumber
+             << " | Model: " << model << " | Engine: " << engineCC << " cc" << endl;
     }
 };
 
-// ---------------------------------------------------------------------
-// Factory: بتبني الكائن الصحيح من صف الداتابيز.
-// نوع جديد (مثلاً Truck) = تضيف سطر هنا بس، والباقي ما يتغيرش.
-// ---------------------------------------------------------------------
+
+// =====================================================
+// Factory (from the team's code): builds the right Vehicle from a DB row.
+// A new type (e.g. Truck) = add one line here, nothing else changes.
+// "extra" = number of doors (Car) or engine cc (Motorcycle).
+// The caller owns the returned pointer (nullptr if the type is unknown).
+// =====================================================
 inline Vehicle* createVehicle(const string& type, int id, int customerId,
                               const string& plate, const string& model, int extra)
 {
-    if (type == "Car")        return new Car(id, customerId, plate, model, extra);
+    if (type == "Car")        return new Car(id, customerId, plate, model, extra > 0 ? extra : 4);
     if (type == "Motorcycle") return new Motorcycle(id, customerId, plate, model, extra);
     return nullptr;
 }
 
 
-// =====================================================================
-// الجزء الثاني: انسخه داخل class Database في Database.cpp
-// (يحتاج #include <vector> و <memory>)
-// =====================================================================
-//
-// جدول الداتابيز المقترح:
-//
-// CREATE TABLE vehicle (
-//     vehicle_id    SERIAL PRIMARY KEY,
-//     customer_id   INT NOT NULL REFERENCES customer(customer_id),
-//     plate_number  VARCHAR(20) NOT NULL UNIQUE,
-//     model         VARCHAR(50),
-//     vehicle_type  VARCHAR(20) NOT NULL,   -- 'Car' / 'Motorcycle'
-//     extra_value   INT                      -- doors or engine cc
-// );
-//
-// الدوال دي بتفترض وجود الـ helpers التالية في Database (من M1):
-//   bool executeQuery(const string& sql);
-//   vector<vector<string>> selectQuery(const string& sql);   // كل صف = vector من النصوص
-//
-// ملاحظة أمان: الأفضل في الآخر تستخدم PQexecParams (prepared statements)
-// بدل دمج النصوص، escapeSql هنا حل مؤقت ضد الـ SQL injection.
-
-    // ---- Helper: تهريب علامة ' ----
-    static string escapeSql(const string& s)
-    {
-        string out;
-        for (char c : s)
-        {
-            if (c == '\'') out += "''";
-            else out += c;
-        }
-        return out;
-    }
-
-    // ---- Edge case: customer_id غير موجود ----
-    bool customerExists(int customerId)
-    {
-        string sql = "SELECT COUNT(*) FROM customer WHERE customer_id = "
-                     + to_string(customerId) + ";";
-        auto rows = selectQuery(sql);
-        return !rows.empty() && stoi(rows[0][0]) > 0;
-    }
-
-    // ---- Edge case: plate number مكرر ----
-    bool plateExists(const string& plate)
-    {
-        string sql = "SELECT COUNT(*) FROM vehicle WHERE plate_number = '"
-                     + escapeSql(plate) + "';";
-        auto rows = selectQuery(sql);
-        return !rows.empty() && stoi(rows[0][0]) > 0;
-    }
-
-    // ---- insertVehicle ----
-    // بتاخد Vehicle& (polymorphism): تشتغل مع Car و Motorcycle وأي نوع جديد.
-    bool insertVehicle(const Vehicle& v)
-    {
-        if (!connected) return false;
-
-        if (v.getPlateNumber().empty())
-        {
-            cout << "Error: plate number is empty." << endl;
-            return false;
-        }
-        if (!customerExists(v.getCustomerId()))
-        {
-            cout << "Error: customer " << v.getCustomerId() << " does not exist." << endl;
-            return false;
-        }
-        if (plateExists(v.getPlateNumber()))
-        {
-            cout << "Error: plate number already registered." << endl;
-            return false;
-        }
-
-        string sql =
-            "INSERT INTO vehicle (customer_id, plate_number, model, vehicle_type, extra_value) VALUES ("
-            + to_string(v.getCustomerId()) + ", '"
-            + escapeSql(v.getPlateNumber()) + "', '"
-            + escapeSql(v.getModel()) + "', '"
-            + escapeSql(v.getVehicleType()) + "', "
-            + to_string(v.getExtraAttribute()) + ");";
-
-        return executeQuery(sql);
-    }
-
-    // ---- getVehiclesByCustomer ----
-    // بترجع vector<unique_ptr<Vehicle>> => الذاكرة تتحرر لوحدها
-    vector<unique_ptr<Vehicle>> getVehiclesByCustomer(int customerId)
-    {
-        vector<unique_ptr<Vehicle>> result;
-        if (!connected) return result;
-
-        string sql =
-            "SELECT vehicle_id, customer_id, plate_number, model, vehicle_type, extra_value "
-            "FROM vehicle WHERE customer_id = " + to_string(customerId)
-            + " ORDER BY vehicle_id;";
-
-        for (const auto& row : selectQuery(sql))
-        {
-            Vehicle* v = createVehicle(row[4],               // type
-                                       stoi(row[0]),         // id
-                                       stoi(row[1]),         // customer_id
-                                       row[2],               // plate
-                                       row[3],               // model
-                                       stoi(row[5]));        // extra
-            if (v) result.emplace_back(v);
-        }
-        return result;
-    }
-
-// =====================================================================
-// مثال اختبار (في main مؤقتاً)
-// =====================================================================
-//
-// // Vehicle v;                          // ❌ compile error: abstract
-// vector<unique_ptr<Vehicle>> list;
-// list.push_back(make_unique<Car>(1, 1, "ABC-123", "Toyota", 4));
-// list.push_back(make_unique<Motorcycle>(2, 1, "XYZ-789", "Yamaha", 250));
-// for (auto& v : list) v->displayInfo();   // output مختلف لكل نوع
-// db.insertVehicle(*list[0]);
-// auto vehicles = db.getVehiclesByCustomer(1);
 // =====================================================
 // Zone
 // =====================================================
@@ -296,23 +211,15 @@ public:
         id = 0;
         name = "";
     }
-    // TODO: Zone(int id, string name);
     Zone(int id, string name)
     {
         this->id = id;
         this->name = name;
     }
+
     // ---- Getters / Setters ----
-    // TODO: int getId() const;
-    int getId() const
-    {
-        return id;
-    }
-    // TODO: string getName() const;
-    string getName() const
-    {
-        return name;
-    }
+    int getId() const { return id; }
+    string getName() const { return name; }
 };
 
 
@@ -325,6 +232,21 @@ enum class SlotStatus
     Reserved,
     Occupied
 };
+
+// Helpers to convert between the enum and the text stored in the database
+inline string slotStatusToString(SlotStatus s)
+{
+    if (s == SlotStatus::Reserved) return "Reserved";
+    if (s == SlotStatus::Occupied) return "Occupied";
+    return "Available";
+}
+
+inline SlotStatus slotStatusFromString(const string& s)
+{
+    if (s == "Reserved") return SlotStatus::Reserved;
+    if (s == "Occupied") return SlotStatus::Occupied;
+    return SlotStatus::Available;
+}
 
 class ParkingSlot
 {
@@ -341,32 +263,28 @@ public:
         id = 0;
         zoneId = 0;
         slotCode = "";
+        status = SlotStatus::Available; // (was uninitialized before)
     }
     ParkingSlot(int id, int zoneId, string slotCode)
     {
         this->id = id;
         this->zoneId = zoneId;
         this->slotCode = slotCode;
+        this->status = SlotStatus::Available;
     }
 
     // ---- Getters / Setters ----
-    SlotStatus getStatus() const
-    {
-        return status;
-    }
-    void setStatus(SlotStatus newStatus)
-    {
-        status = newStatus ;
-    }
+    int getId() const { return id; }
+    int getZoneId() const { return zoneId; }
+    string getSlotCode() const { return slotCode; }
+    SlotStatus getStatus() const { return status; }
+    void setStatus(SlotStatus newStatus) { status = newStatus; }
 
     // ---- Behavior ----
-     bool isAvailable() const
-     {
-         if(status == SlotStatus::Available)
-           return true;
-         else
-            return false;
-     }
+    bool isAvailable() const
+    {
+        return status == SlotStatus::Available;
+    }
 };
 
 
@@ -377,33 +295,42 @@ class PricingStrategy
 {
 public:
     virtual ~PricingStrategy() {}
-    // TODO: virtual double calculatePrice(int durationMinutes) const = 0;
+    virtual double calculatePrice(int durationMinutes) const = 0;
 };
 
 
 // =====================================================
-// NormalPricing
+// NormalPricing  (10 per started hour, minimum 1 hour)
 // =====================================================
 class NormalPricing : public PricingStrategy
 {
 public:
-    // TODO: double calculatePrice(int durationMinutes) const override;
+    double calculatePrice(int durationMinutes) const override
+    {
+        const double RATE_PER_HOUR = 10.0; // change the price here
+        int hours = (durationMinutes + 59) / 60; // round up
+        if (hours < 1) hours = 1;
+        return hours * RATE_PER_HOUR;
+    }
 };
 
 
 // =====================================================
-// VipPricing
+// VipPricing  (6 per started hour, minimum 1 hour)
 // =====================================================
 class VipPricing : public PricingStrategy
 {
 public:
-    // TODO: double calculatePrice(int durationMinutes) const override;
+    double calculatePrice(int durationMinutes) const override
+    {
+        const double RATE_PER_HOUR = 6.0; // change the VIP price here
+        int hours = (durationMinutes + 59) / 60; // round up
+        if (hours < 1) hours = 1;
+        return hours * RATE_PER_HOUR;
+    }
 };
 
 
-// =====================================================
-// Reservation
-// =====================================================
 // =====================================================
 // Reservation
 // =====================================================
@@ -414,6 +341,20 @@ enum class ReservationStatus
     Cancelled
 };
 
+inline string reservationStatusToString(ReservationStatus s)
+{
+    if (s == ReservationStatus::Confirmed) return "Confirmed";
+    if (s == ReservationStatus::Cancelled) return "Cancelled";
+    return "Pending";
+}
+
+inline ReservationStatus reservationStatusFromString(const string& s)
+{
+    if (s == "Confirmed") return ReservationStatus::Confirmed;
+    if (s == "Cancelled") return ReservationStatus::Cancelled;
+    return ReservationStatus::Pending;
+}
+
 class Reservation
 {
 private:
@@ -421,9 +362,9 @@ private:
     int customerId;
     int vehicleId;
     int slotId;
-    string date;
-    string startTime;
-    string endTime;
+    string date;      // YYYY-MM-DD
+    string startTime; // HH:MM
+    string endTime;   // HH:MM
     ReservationStatus status;
 
 public:
@@ -453,37 +394,19 @@ public:
     }
 
     // ---- Getters / Setters ----
-    int getId() const
-    {
-        return id;
-    }
+    int getId() const { return id; }
+    int getCustomerId() const { return customerId; }
+    int getVehicleId() const { return vehicleId; }
+    int getSlotId() const { return slotId; }
+    string getDate() const { return date; }
+    string getStartTime() const { return startTime; }
+    string getEndTime() const { return endTime; }
+    ReservationStatus getStatus() const { return status; }
 
-    ReservationStatus getStatus() const
-    {
-        return status;
-    }
-
-
-    bool hasConflict() const
-    {
-
-
-        return false;
-    }
-
-    bool save()
-  {
-        return true;
-    }
-
-    bool cancel()
-    {
-        this->status = ReservationStatus::Cancelled;
-
-
-        return true;
-    }
+    void setId(int id) { this->id = id; }
+    void setStatus(ReservationStatus s) { status = s; }
 };
+
 
 // =====================================================
 // ParkingSession
@@ -496,16 +419,50 @@ private:
     string checkInTime;
     string checkOutTime;
     bool isActive;
+    int durationMinutes;
 
 public:
     // ---- Constructors ----
-    ParkingSession();
-    // TODO: ParkingSession(int reservationId);
+    ParkingSession()
+    {
+        id = 0;
+        reservationId = 0;
+        checkInTime = "";
+        checkOutTime = "";
+        isActive = false;
+        durationMinutes = 0;
+    }
+    ParkingSession(int reservationId)
+    {
+        id = 0;
+        this->reservationId = reservationId;
+        checkInTime = "";
+        checkOutTime = "";
+        isActive = false;
+        durationMinutes = 0;
+    }
+    // Used when loading a session from the database
+    ParkingSession(int id, int reservationId, string checkIn, string checkOut, bool active, int durationMinutes)
+    {
+        this->id = id;
+        this->reservationId = reservationId;
+        this->checkInTime = checkIn;
+        this->checkOutTime = checkOut;
+        this->isActive = active;
+        this->durationMinutes = durationMinutes;
+    }
+
+    // ---- Getters ----
+    int getId() const { return id; }
+    int getReservationId() const { return reservationId; }
+    string getCheckInTime() const { return checkInTime; }
+    string getCheckOutTime() const { return checkOutTime; }
+    bool getIsActive() const { return isActive; }
 
     // ---- Behavior ----
-    // TODO: void checkIn();
-    // TODO: void checkOut();
-    // TODO: int getDurationMinutes() const;
+    void checkIn() { isActive = true; }
+    void checkOut() { isActive = false; }
+    int getDurationMinutes() const { return durationMinutes; }
 };
 
 
@@ -528,13 +485,51 @@ private:
 
 public:
     // ---- Constructors ----
-    Payment();
-    // TODO: Payment(int sessionId, double amount);
+    Payment() : id(0), sessionId(0), amount(0.0), status(PaymentStatus::Pending) {}
+    Payment(int sessionId, double amount)
+    {
+        this->id = 0;
+        this->sessionId = sessionId;
+        this->amount = amount;
+        this->status = PaymentStatus::Pending;
+    }
+    // Used when loading a payment from the database
+    Payment(int id, int sessionId, double amount, PaymentStatus status)
+    {
+        this->id = id;
+        this->sessionId = sessionId;
+        this->amount = amount;
+        this->status = status;
+    }
+
+    // ---- Getters ----
+    int getId() const { return id; }
+    int getSessionId() const { return sessionId; }
+    double getAmount() const { return amount; }
+    PaymentStatus getStatus() const { return status; }
 
     // ---- Behavior ----
-    // TODO: bool processPayment();
-    // TODO: double calculateAmount(const ParkingSession& session, const PricingStrategy& strategy);
+    bool processPayment()
+    {
+        if (status == PaymentStatus::Paid) return false; // already paid
+        status = PaymentStatus::Paid;
+        return true;
+    }
+
+    double calculateAmount(const ParkingSession& session, const PricingStrategy& strategy)
+    {
+        amount = strategy.calculatePrice(session.getDurationMinutes());
+        return amount;
+    }
 };
+
+
+
+// =====================================================
+// The other two files (included here, in this order)
+// =====================================================
+#include "Database.cpp"
+#include "GUI.cpp"
 
 
 // =====================================================
@@ -542,13 +537,24 @@ public:
 // =====================================================
 int main()
 {
-    // TODO: Initialize Database connection
-
-    // TODO: Initialize GUI (ImGui window + main loop)
-
-    // TODO: Show Login Screen first, then Dashboard after successful login
-
     cout << "Parking Management System - Starting..." << endl;
 
+    // The Database object is created here, but the connection itself is made
+    // from the first screen of the GUI (so the password is never written in the code).
+    Database db;
+
+    // Initialize GUI (ImGui window + main loop)
+    GUI gui(db);
+    if (!gui.init())
+    {
+        cerr << "Could not start the GUI." << endl;
+        return 1;
+    }
+
+    // Screens order: Connect -> Login -> Dashboard
+    gui.mainLoop();
+
+    gui.shutdown();
+    cout << "Program closed." << endl;
     return 0;
 }

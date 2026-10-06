@@ -38,10 +38,77 @@ public:
     // TODO: /* list */ getVehiclesByCustomer(int customerId);
 
     // ---- Zone / ParkingSlot ----
-    // TODO: /* list */ getAllZones();
-    // TODO: /* list */ getSlotsByZone(int zoneId);
-    // TODO: bool updateSlotStatus(int slotId, int newStatus);
+    vector<Zone> Database::getAllZones()
+    {
+        PGresult* res = PQexec (conn, "SELECT zone_id, name FROM zone ORDER BY zone_id;");
+        if(PQresultStatus(res) == PGRES_TUPLES_OK)
+        {
+            int rowCount = PQntubles(res);
+            for(int i = 0; i < rowCount; i++)
+            {
+                int id = stoi(PQgetvalue(res, i, 0));
+                string name = PQgetvalue(res, i, 0));
+                zoneList.push_back(Zone(id, name));
+            }
+        }
 
+        PQclear(res);
+        return zoneList;
+    }
+    vector<ParkingSlot> Dtabadse::getSlotsByZone(int zoneId)
+    {
+        vector<ParkingSlot> slotsList;
+        string zoneIdStr = to_string(zoneId);
+        const char* paramValues[] = {zoneIdStr.c_str()};
+        const char* query = "SELECT slot_id, zone_id, slot_code, status FROM parking_slot WHERE zone_id = $1;";
+        PGresult* res = PQexecParams(conn, query, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if(PqresultStatus(res) == PGRES_TUPLES_OK)
+        {
+            int rowCount = PQtuples(res);
+            for(int i = 0; i < rowCount; i++)
+            {
+                int id = stoi(PQgetvalue(res, i, 0));
+                int zId = stoi(PQgetValue(res, i, 1));
+                string code = PQgetValue(res, i, 2);
+                string dbStatus = PQgetValue(res, i, 3);
+
+                SlotStatus currentStatus = SlotStatus::Available;
+                if(dbStatus == "Reserved"){
+                    currentStatus = SlotStatus::Reserved;
+                }
+                else if (dbStatus == "Occupied"){
+                    currentStatus = SlotStatus::Occupied;
+                }
+
+                ParkingSlot slot(id, zId, code);
+                slot.setStatus(currentStatus);
+
+                slotsList.push_back(slot);
+            }
+        }
+
+        PQclear(res);
+        return slotsList;
+    }
+    bool Database::updateSlotStatus(int slotId, int newStatus)
+    {
+        strig slotIdStr = to_string(slotId);
+        string statusStr = "Available";
+        if(newStatus == 1)
+            statusStr = "Reserved";
+        else if (newStatus == 2)
+            statusStr = "Occupied";
+
+      const char* paramValues[] = { slotIdStr.c_str(), statusStr.c_str() };
+      const char* query = "UPDATE parking _slot SET status = $2 WHERE slot_id = $1;";
+
+      PGresult* res = PQexecParams(conn, query, 2, nullptr, paramValues, nullptr, nullptr, 0);
+      bool isSuccess = (PQresultStatus(res) == PGRES_COMMAND_OK);
+
+      PQclear(res);
+      return isSuccess;
+    }
     // ---- Reservation ----
   // داخل تعريف الـ class Database في Database.cpp:
 
@@ -52,19 +119,19 @@ public:
         // SQL الافتراضي:
         // string sql = "INSERT INTO reservation (customer_id, vehicle_id, slot_id, reserve_date, start_time, end_time, status) "
         //              "VALUES (" + to_string(customerId) + ", " + to_string(vehicleId) + ", " + to_string(slotId) + ", '" + date + "', '" + startTime + "', '" + endTime + "', 'Pending');";
-        
+
         // return executeQuery(sql);
-        return true; 
+        return true;
     }
 
     bool hasConflictingReservation(int slotId, const string& date, const string& startTime, const string& endTime)
     {
         // SQL الافتراضي للتحقق من تقاطع الأوقات لنفس الموقف (slot_id) وفي نفس اليوم (reserve_date)
-        // string sql = "SELECT COUNT(*) FROM reservation WHERE slot_id = " + to_string(slotId) + 
+        // string sql = "SELECT COUNT(*) FROM reservation WHERE slot_id = " + to_string(slotId) +
         //              " AND reserve_date = '" + date + "'" +
         //              " AND status != 'Cancelled'" +
         //              " AND (start_time < '" + endTime + "' AND end_time > '" + startTime + "');";
-        
+
         // int count = selectQueryCount(sql);
         // return count > 0;
         return false;
@@ -74,7 +141,7 @@ public:
     {
         // SQL الافتراضي:
         // string sql = "UPDATE reservation SET status = 'Cancelled' WHERE reservation_id = " + to_string(reservationId) + ";";
-        
+
         // return executeQuery(sql);
         return true;
     }
